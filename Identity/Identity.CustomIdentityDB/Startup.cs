@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Identity.IdentityDB.Models;
-using Identity.IdentityDB.Stores;
+using Identity.CustomIdentityDB.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -15,7 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace Identity.IdentityDB
+namespace Identity.CustomIdentityDB
 {
     public class Startup
     {
@@ -31,14 +30,14 @@ namespace Identity.IdentityDB
         {
             services.AddControllersWithViews();
 
-            var connectionString = @"Server=.;Database=IdentityUserDB;User Id=sa;Password=Admin@123;";
+            var connectionString = @"Server=.;Database=CustomIdentityUserDB;User Id=sa;Password=Admin@123;";
             var migrationAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
 
-            services.AddDbContext<IdentityDbContext>(options => options.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(migrationAssembly)));
+            services.AddDbContext<CustomIdentityDbContext>(options => options.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(migrationAssembly)));
 
-            services.AddIdentityCore<IdentityUser>(options => { });
+            services.AddIdentityCore<CustomIdentityUser>(options => { });
 
-            services.AddScoped<IUserStore<IdentityUser>, UserOnlyStore<IdentityUser, IdentityDbContext>>();
+            services.AddScoped<IUserStore<CustomIdentityUser>, UserOnlyStore<CustomIdentityUser, CustomIdentityDbContext>>();
 
             // Packages: Microsoft.AspNetCore.Authentication.Cookies
             services.AddAuthentication("cookies")
