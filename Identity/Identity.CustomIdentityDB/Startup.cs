@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Identity.CustomIdentityDB.Factories;
 using Identity.CustomIdentityDB.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -35,13 +36,14 @@ namespace Identity.CustomIdentityDB
 
             services.AddDbContext<CustomIdentityDbContext>(options => options.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(migrationAssembly)));
 
-            services.AddIdentityCore<CustomIdentityUser>(options => { });
+            services
+                .AddIdentity<CustomIdentityUser, IdentityRole>(options => { })
+                .AddEntityFrameworkStores<CustomIdentityDbContext>();
 
             services.AddScoped<IUserStore<CustomIdentityUser>, UserOnlyStore<CustomIdentityUser, CustomIdentityDbContext>>();
+            services.AddScoped<IUserClaimsPrincipalFactory<CustomIdentityUser>, CustomUserClaimsPrincipalFactory>();
 
-            // Packages: Microsoft.AspNetCore.Authentication.Cookies
-            services.AddAuthentication("cookies")
-                    .AddCookie("cookies", options => options.LoginPath = "/Account/Login");
+            services.ConfigureApplicationCookie(options => options.LoginPath = "/Account/Login");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -62,7 +64,7 @@ namespace Identity.CustomIdentityDB
 
             app.UseRouting();
 
-            app.UseAuthorization();
+            app.UseAuthentication();
 
             app.UseAuthorization();
 

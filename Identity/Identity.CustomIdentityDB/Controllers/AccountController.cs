@@ -14,11 +14,16 @@ namespace Identity.CustomIdentityDB.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly UserManager<CustomIdentityUser> _userManager;
+        private readonly IUserClaimsPrincipalFactory<CustomIdentityUser> _providerFactory;
 
-        public AccountController(ILogger<HomeController> logger, UserManager<CustomIdentityUser> userManager)
+        public AccountController(
+            ILogger<HomeController> logger,
+            UserManager<CustomIdentityUser> userManager,
+            IUserClaimsPrincipalFactory<CustomIdentityUser> providerFactory)
         {
             this._logger = logger;
             this._userManager = userManager;
+            this._providerFactory = providerFactory;
         }
 
         public IActionResult Register()
@@ -75,11 +80,8 @@ namespace Identity.CustomIdentityDB.Controllers
 
                 if (user != null && await this._userManager.CheckPasswordAsync(user, viewModel.Password))
                 {
-                    var identity = new ClaimsIdentity("cookies");
-                    identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, user.Id));
-                    identity.AddClaim(new Claim(ClaimTypes.Name, user.UserName));
-
-                    await HttpContext.SignInAsync("cookies", new ClaimsPrincipal(identity));
+                    var principle = await this._providerFactory.CreateAsync(user);
+                    await HttpContext.SignInAsync("Identity.Application", principle);
 
                     return RedirectToAction("Index", "Home");
                 }
