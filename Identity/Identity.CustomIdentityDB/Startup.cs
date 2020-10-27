@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Identity.CustomIdentityDB.Factories;
 using Identity.CustomIdentityDB.Models;
+using Identity.CustomIdentityDB.Providers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -37,11 +38,27 @@ namespace Identity.CustomIdentityDB
             services.AddDbContext<CustomIdentityDbContext>(options => options.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(migrationAssembly)));
 
             services
-                .AddIdentity<CustomIdentityUser, IdentityRole>(options => { })
-                .AddEntityFrameworkStores<CustomIdentityDbContext>();
+                .AddIdentity<CustomIdentityUser, IdentityRole>(options =>
+                {
+                    // options.SignIn.RequireConfirmedEmail = true;
+                    options.Tokens.EmailConfirmationTokenProvider = "emailconf";
+                })
+                .AddEntityFrameworkStores<CustomIdentityDbContext>()
+                .AddDefaultTokenProviders()
+                .AddTokenProvider<EmailConfirmationTokenProvider<CustomIdentityUser>>("emailconf");
 
             services.AddScoped<IUserStore<CustomIdentityUser>, UserOnlyStore<CustomIdentityUser, CustomIdentityDbContext>>();
             services.AddScoped<IUserClaimsPrincipalFactory<CustomIdentityUser>, CustomUserClaimsPrincipalFactory>();
+
+            services.Configure<DataProtectionTokenProviderOptions>(options =>
+            {
+                options.TokenLifespan = TimeSpan.FromHours(3);
+            });
+
+            services.Configure<EmailConfirmationTokenProviderOptions>(options =>
+            {
+                options.TokenLifespan = TimeSpan.FromDays(2);
+            });
 
             services.ConfigureApplicationCookie(options => options.LoginPath = "/Account/Login");
         }
