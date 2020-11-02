@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Identity.CustomIdentityDB.Factories;
 using Identity.CustomIdentityDB.Models;
 using Identity.CustomIdentityDB.Providers;
+using Identity.CustomIdentityDB.Validators;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -42,10 +43,20 @@ namespace Identity.CustomIdentityDB
                 {
                     // options.SignIn.RequireConfirmedEmail = true;
                     options.Tokens.EmailConfirmationTokenProvider = "emailconf";
+
+                    options.Password.RequireNonAlphanumeric = false;
+                    options.Password.RequiredUniqueChars = 4;
+
+                    options.User.RequireUniqueEmail = true;
+
+                    options.Lockout.AllowedForNewUsers = true;
+                    options.Lockout.MaxFailedAccessAttempts = 3;
+                    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
                 })
                 .AddEntityFrameworkStores<CustomIdentityDbContext>()
                 .AddDefaultTokenProviders()
-                .AddTokenProvider<EmailConfirmationTokenProvider<CustomIdentityUser>>("emailconf");
+                .AddTokenProvider<EmailConfirmationTokenProvider<CustomIdentityUser>>("emailconf")
+                .AddPasswordValidator<DoesNotContainPasswordValidator<CustomIdentityUser>>();
 
             services.AddScoped<IUserStore<CustomIdentityUser>, UserOnlyStore<CustomIdentityUser, CustomIdentityDbContext>>();
             services.AddScoped<IUserClaimsPrincipalFactory<CustomIdentityUser>, CustomUserClaimsPrincipalFactory>();
@@ -61,6 +72,14 @@ namespace Identity.CustomIdentityDB
             });
 
             services.ConfigureApplicationCookie(options => options.LoginPath = "/Account/Login");
+
+            services.AddAuthentication()
+                .AddGoogle("google", options =>
+                {
+                    options.ClientId = "791085069039-cas6urvvl7fqq5ri3dqbr28lih7jb1qj.apps.googleusercontent.com";
+                    options.ClientSecret = "iXK4guuofMgMkfz_889y3Av6";
+                    options.SignInScheme = IdentityConstants.ExternalScheme;
+                });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

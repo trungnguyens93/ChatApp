@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Identity.CustomIdentityDB.Models;
@@ -66,6 +67,15 @@ namespace Identity.CustomIdentityDB.Controllers
 
                         return View("Success");
                     }
+                    else
+                    {
+                        foreach (var error in result.Errors)
+                        {
+                            ModelState.AddModelError("", error.Description);
+                        }
+
+                        return View();
+                    }
                 }
             }
 
@@ -90,30 +100,70 @@ namespace Identity.CustomIdentityDB.Controllers
             {
                 var user = await this._userManager.FindByNameAsync(viewModel.UserName);
 
-                if (user != null && await this._userManager.CheckPasswordAsync(user, viewModel.Password))
+                if (user != null && !await this._userManager.IsLockedOutAsync(user))
                 {
-                    if (!await this._userManager.IsEmailConfirmedAsync(user))
+                    if (await this._userManager.CheckPasswordAsync(user, viewModel.Password))
                     {
-                        ModelState.AddModelError("", "Email is not confirmed");
-                        return View();
+                        if (!await this._userManager.IsEmailConfirmedAsync(user))
+                        {
+                            ModelState.AddModelError("", "Email is not confirmed");
+                            return View();
+                        }
+
+                        await this._userManager.ResetAccessFailedCountAsync(user);
+
+                        // if having a 2SV requirement
+                        if (await this._userManager.GetTwoFactorEnabledAsync(user))
+                        {
+                            var validProviders = await this._userManager.GetValidTwoFactorProvidersAsync(user);
+
+                            if (validProviders.Contains(this._userManager.Options.Tokens.AuthenticatorTokenProvider))
+                            {
+                                await HttpContext.SignInAsync(IdentityConstants.TwoFactorUserIdScheme, Store2FA(user.Id, this._userManager.Options.Tokens.AuthenticatorTokenProvider));
+                                return RedirectToAction("TwoFactor", "Account");
+                            }
+
+                            if (validProviders.Contains("Email"))
+                            {
+                                var token = await this._userManager.GenerateTwoFactorTokenAsync(user, "Email");
+                                System.IO.File.WriteAllText("email2SA.txt", token);
+
+                                await HttpContext.SignInAsync(IdentityConstants.TwoFactorUserIdScheme, Store2FA(user.Id, "Email"));
+
+                                return RedirectToAction("TwoFactor", "Account");
+                            }
+                        }
+
+                        var principal = await this._providerFactory.CreateAsync(user);
+                        await HttpContext.SignInAsync(IdentityConstants.ApplicationScheme, principal);
+                        return RedirectToAction("Index", "Home");
+
+                        // var signInResult = await this._signInManager.PasswordSignInAsync(viewModel.UserName, viewModel.Password, false, false);
+
+                        // if (signInResult.Succeeded)
+                        // {
+                        //     return RedirectToAction("Index", "Home");
+                        // }
                     }
 
-                    var principal = await this._providerFactory.CreateAsync(user);
-                    await HttpContext.SignInAsync("Identity.Application", principal);
-                    return RedirectToAction("Index", "Home");
+                    await this._userManager.AccessFailedAsync(user);
 
-                    // var signInResult = await this._signInManager.PasswordSignInAsync(viewModel.UserName, viewModel.Password, false, false);
-
-                    // if (signInResult.Succeeded)
-                    // {
-                    //     return RedirectToAction("Index", "Home");
-                    // }
+                    if (await this._userManager.IsLockedOutAsync(user))
+                    {
+                        // email user, notifying them of lockout
+                    }
                 }
 
                 ModelState.AddModelError("", "Invalid UserName or Password");
             }
 
             return View();
+        }
+
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+            return RedirectToAction("Index", "Home");
         }
 
         public IActionResult ForgotPassword()
@@ -172,6 +222,11 @@ namespace Identity.CustomIdentityDB.Controllers
                         return View();
                     }
 
+                    if (await this._userManager.IsLockedOutAsync(user))
+                    {
+                        await this._userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow);
+                    }
+
                     return View("Success");
                 }
 
@@ -196,6 +251,150 @@ namespace Identity.CustomIdentityDB.Controllers
             }
 
             return View("Error", "Home");
+        }
+
+        private ClaimsPrincipal Store2FA(string userId, string provider)
+        {
+            var identity = new ClaimsIdentity(new List<Claim>
+            {
+                new Claim("sub", userId),
+                new Claim("amr", provider)
+            }, IdentityConstants.TwoFactorUserIdScheme);
+
+            return new ClaimsPrincipal(identity);
+        }
+
+        public IActionResult TwoFactor()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> TwoFactor(TwoFactorViewModel viewModel)
+        {
+            var result = await HttpContext.AuthenticateAsync(IdentityConstants.TwoFactorUserIdScheme);
+            if (!result.Succeeded)
+            {
+                ModelState.AddModelError("", "You login request has expired, please start over");
+                return View();
+            }
+
+            if (ModelState.IsValid)
+            {
+                var user = await this._userManager.FindByIdAsync(result.Principal.FindFirstValue("sub"));
+
+                if (user != null)
+                {
+                    var isValid = await this._userManager.VerifyTwoFactorTokenAsync(
+                            user, result.Principal.FindFirstValue("amr"), viewModel.Token);
+
+                    if (isValid)
+                    {
+                        await HttpContext.SignOutAsync(IdentityConstants.TwoFactorUserIdScheme);
+
+                        var principal = await this._providerFactory.CreateAsync(user);
+                        await HttpContext.SignInAsync(IdentityConstants.ApplicationScheme, principal);
+                        return RedirectToAction("Index", "Home");
+                    }
+
+                    ModelState.AddModelError("", "Invalid token");
+                    return View();
+                }
+
+                ModelState.AddModelError("", "Invalid request");
+            }
+
+            return View();
+        }
+
+        public async Task<IActionResult> RegisterAuthenticator()
+        {
+            var user = await this._userManager.GetUserAsync(User);
+
+            var authenticatorKey = await this._userManager.GetAuthenticatorKeyAsync(user);
+            if (authenticatorKey == null)
+            {
+                await this._userManager.ResetAuthenticatorKeyAsync(user);
+                authenticatorKey = await this._userManager.GetAuthenticatorKeyAsync(user);
+            }
+
+            return View(new RegisterAuthenticatorViewModel { AuthenticatorKey = authenticatorKey });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RegisterAuthenticator(RegisterAuthenticatorViewModel viewModel)
+        {
+            var user = await this._userManager.GetUserAsync(User);
+
+            var isValid = await this._userManager.VerifyTwoFactorTokenAsync(user, this._userManager.Options.Tokens.AuthenticatorTokenProvider, viewModel.Code);
+
+            if (!isValid)
+            {
+                ModelState.AddModelError("", "Code is invalid");
+                return View(viewModel);
+            }
+
+            await this._userManager.SetTwoFactorEnabledAsync(user, true);
+
+            return View("Success");
+        }
+
+        public IActionResult ExternalLogin(string provider)
+        {
+            var properties = new AuthenticationProperties
+            {
+                RedirectUri = Url.Action("ExternalLoginCallback", "Account"),
+                Items = { { "scheme", provider } }
+            };
+
+            return Challenge(properties, provider);
+        }
+
+        public async Task<IActionResult> ExternalLoginCallback()
+        {
+            var result = await HttpContext.AuthenticateAsync(IdentityConstants.ExternalScheme);
+
+            var externalUserId = result.Principal.FindFirstValue("sub")
+                                ?? result.Principal.FindFirstValue(ClaimTypes.NameIdentifier)
+                                ?? throw new Exception("Cannot find external user id");
+
+            var provider = result.Properties.Items["scheme"];
+
+            var user = await this._userManager.FindByLoginAsync(provider, externalUserId);
+
+            if (user == null)
+            {
+                var email = result.Principal.FindFirstValue("email")
+                            ?? result.Principal.FindFirstValue(ClaimTypes.Email);
+
+                if (email != null)
+                {
+                    user = await this._userManager.FindByEmailAsync(email);
+
+                    if (user == null)
+                    {
+                        user = new CustomIdentityUser
+                        {
+                            Id = Guid.NewGuid().ToString(),
+                            UserName = email,
+                            Email = email
+                        };
+
+                        await this._userManager.CreateAsync(user);
+                    }
+
+                    await this._userManager.AddLoginAsync(user, new UserLoginInfo(provider, externalUserId, provider));
+                }
+            }
+
+            if (user == null) return View("Error", "Home");
+
+            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+
+            var claimsPrincipal = await this._providerFactory.CreateAsync(user);
+            await HttpContext.SignInAsync(IdentityConstants.ApplicationScheme, claimsPrincipal);
+
+            return RedirectToAction("Index", "Home");
         }
     }
 }

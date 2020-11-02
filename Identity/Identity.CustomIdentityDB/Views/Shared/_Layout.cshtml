@@ -31,6 +31,13 @@ asp-action="Index">Identity.CustomIdentityDB</a>
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home"
 asp-action="Privacy">Privacy</a>
                         </li>
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Account"
+    asp-action="RegisterAuthenticator">Register Authenticator</a>
+                            </li>
+                        }
                     </ul>
                 </div>
 
@@ -49,7 +56,14 @@ asp-action="Privacy">Privacy</a>
                         }
                         else
                         {
-                            <li class="nav-item">@User.Claims.LastOrDefault(p => p.Type.Contains("name")).Value</li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" href="#">@User.Claims.LastOrDefault(p =>
+                                                                                    p.Type.Contains("name")).Value</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Account"
+    asp-action="Logout">Logout</a>
+                            </li>
                         }
                     </ul>
                 </div>
