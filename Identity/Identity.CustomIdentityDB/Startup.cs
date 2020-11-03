@@ -42,30 +42,33 @@ namespace Identity.CustomIdentityDB
                 .AddIdentity<CustomIdentityUser, IdentityRole>(options =>
                 {
                     // options.SignIn.RequireConfirmedEmail = true;
-                    options.Tokens.EmailConfirmationTokenProvider = "emailconf";
+                    options.Tokens.EmailConfirmationTokenProvider = "emailconf"; // using for confirmation email function
 
+                    // using for password validation
                     options.Password.RequireNonAlphanumeric = false;
                     options.Password.RequiredUniqueChars = 4;
-
                     options.User.RequireUniqueEmail = true;
 
+                    // using for lockout account function
                     options.Lockout.AllowedForNewUsers = true;
                     options.Lockout.MaxFailedAccessAttempts = 3;
                     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
                 })
                 .AddEntityFrameworkStores<CustomIdentityDbContext>()
-                .AddDefaultTokenProviders()
-                .AddTokenProvider<EmailConfirmationTokenProvider<CustomIdentityUser>>("emailconf")
-                .AddPasswordValidator<DoesNotContainPasswordValidator<CustomIdentityUser>>();
+                .AddDefaultTokenProviders() // using for Forgot password function
+                .AddTokenProvider<EmailConfirmationTokenProvider<CustomIdentityUser>>("emailconf") // using for confirmation email function
+                .AddPasswordValidator<DoesNotContainPasswordValidator<CustomIdentityUser>>(); // using for password validation
 
             services.AddScoped<IUserStore<CustomIdentityUser>, UserOnlyStore<CustomIdentityUser, CustomIdentityDbContext>>();
             services.AddScoped<IUserClaimsPrincipalFactory<CustomIdentityUser>, CustomUserClaimsPrincipalFactory>();
 
+            // using for Forgot password function
             services.Configure<DataProtectionTokenProviderOptions>(options =>
             {
                 options.TokenLifespan = TimeSpan.FromHours(3);
             });
 
+            // using for confirmation email function
             services.Configure<EmailConfirmationTokenProviderOptions>(options =>
             {
                 options.TokenLifespan = TimeSpan.FromDays(2);
