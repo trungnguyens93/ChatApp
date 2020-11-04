@@ -59,7 +59,7 @@ namespace Identity.CustomIdentityDB
                 .AddTokenProvider<EmailConfirmationTokenProvider<CustomIdentityUser>>("emailconf") // using for confirmation email function
                 .AddPasswordValidator<DoesNotContainPasswordValidator<CustomIdentityUser>>(); // using for password validation
 
-            services.AddScoped<IUserStore<CustomIdentityUser>, UserOnlyStore<CustomIdentityUser, CustomIdentityDbContext>>();
+            services.AddScoped<IUserStore<CustomIdentityUser>, UserStore<CustomIdentityUser, IdentityRole, CustomIdentityDbContext>>();
             services.AddScoped<IUserClaimsPrincipalFactory<CustomIdentityUser>, CustomUserClaimsPrincipalFactory>();
 
             // using for Forgot password function
@@ -74,7 +74,11 @@ namespace Identity.CustomIdentityDB
                 options.TokenLifespan = TimeSpan.FromDays(2);
             });
 
-            services.ConfigureApplicationCookie(options => options.LoginPath = "/Account/Login");
+            services.ConfigureApplicationCookie(options =>
+            {
+                options.LoginPath = "/Account/Login";
+                options.AccessDeniedPath = "/Account/AccessDenied";
+            });
 
             services.AddAuthentication()
                 .AddGoogle("google", options =>

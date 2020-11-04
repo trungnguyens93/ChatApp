@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Identity.CustomIdentityDB.Constants;
 using Identity.CustomIdentityDB.Models;
 using Identity.CustomIdentityDB.ViewModels;
 using Microsoft.AspNetCore.Authentication;
@@ -15,17 +16,20 @@ namespace Identity.CustomIdentityDB.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly UserManager<CustomIdentityUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IUserClaimsPrincipalFactory<CustomIdentityUser> _providerFactory;
         private readonly SignInManager<CustomIdentityUser> _signInManager;
 
         public AccountController(
             ILogger<HomeController> logger,
             UserManager<CustomIdentityUser> userManager,
+            RoleManager<IdentityRole> roleManager,
             IUserClaimsPrincipalFactory<CustomIdentityUser> providerFactory,
             SignInManager<CustomIdentityUser> signInManager)
         {
             this._logger = logger;
             this._userManager = userManager;
+            this._roleManager = roleManager;
             this._providerFactory = providerFactory;
             this._signInManager = signInManager;
         }
@@ -56,6 +60,18 @@ namespace Identity.CustomIdentityDB.Controllers
 
                     if (result.Succeeded)
                     {
+                        if (!await this._roleManager.RoleExistsAsync(UserRole.Admin))
+                        {
+                            await this._roleManager.CreateAsync(new IdentityRole(UserRole.Admin));
+                        }
+
+                        if (!await this._roleManager.RoleExistsAsync(UserRole.SuperAdmin))
+                        {
+                            await this._roleManager.CreateAsync(new IdentityRole(UserRole.SuperAdmin));
+                        }
+
+                        await this._userManager.AddToRoleAsync(user, UserRole.Admin);
+
                         var token = await this._userManager.GenerateEmailConfirmationTokenAsync(user);
                         var confirmEmailUrl = Url.Action(
                                                     "ConfirmEmailAddress",
@@ -395,6 +411,11 @@ namespace Identity.CustomIdentityDB.Controllers
             await HttpContext.SignInAsync(IdentityConstants.ApplicationScheme, claimsPrincipal);
 
             return RedirectToAction("Index", "Home");
+        }
+
+        public IActionResult AccessDenied()
+        {
+            return View();
         }
     }
 }
