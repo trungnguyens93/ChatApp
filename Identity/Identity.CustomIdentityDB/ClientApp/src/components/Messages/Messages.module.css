@@ -1,0 +1,19 @@
+.messages {
+  height: auto;
+  min-height: calc(100% - 93px);
+  max-height: calc(100% - 93px);
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+@media screen and (max-width: 735px) {
+  .messages {
+    max-height: calc(100% - 105px);
+  }
+}
+.messages::-webkit-scrollbar {
+  width: 8px;
+  background: transparent;
+}
+.messages::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.3);
+}
