@@ -10,9 +10,9 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/Identity/Identity.WebUI/bin/Debug/netcoreapp3.1/Identity.WebUI.dll",
+            "program": "${workspaceFolder}/Identity/Identity.CustomIdentityDB/bin/Debug/netcoreapp3.1/Identity.CustomIdentityDB.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/Identity/Identity.WebUI",
+            "cwd": "${workspaceFolder}/Identity/Identity.CustomIdentityDB",
             "stopAtEntry": false,
             // Enable launching a web browser when ASP.NET Core starts. For more information: https://aka.ms/VSCode-CS-LaunchJson-WebBrowser
             "serverReadyAction": {
