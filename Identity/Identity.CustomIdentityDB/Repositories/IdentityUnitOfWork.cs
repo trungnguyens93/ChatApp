@@ -3,7 +3,7 @@ using Identity.CustomIdentityDB.Repository;
 
 namespace Identity.CustomIdentityDb.Repository
 {
-    public class IdentityUnitOfWork : UnitOfWork<CustomIdentityDbContext>
+    public class IdentityUnitOfWork : UnitOfWork<CustomIdentityDbContext>, IIdentityUnitOfWork
     {
         private INotificationRepository _notificationRepository;
         private IGroupRepository _groupRepository;

@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Identity.CustomIdentityDb.Repository;
 using Identity.CustomIdentityDB.Factories;
 using Identity.CustomIdentityDB.Models;
 using Identity.CustomIdentityDB.Providers;
+using Identity.CustomIdentityDB.Repository;
+using Identity.CustomIdentityDB.Service;
 using Identity.CustomIdentityDB.Validators;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -64,6 +67,8 @@ namespace Identity.CustomIdentityDB
 
             services.AddScoped<IUserStore<CustomIdentityUser>, UserStore<CustomIdentityUser, IdentityRole, CustomIdentityDbContext>>();
             services.AddScoped<IUserClaimsPrincipalFactory<CustomIdentityUser>, CustomUserClaimsPrincipalFactory>();
+            services.AddScoped<IIdentityUnitOfWork, IdentityUnitOfWork>();
+            services.AddScoped<IMemberService, MemberService>();
 
             // using for Forgot password function
             services.Configure<DataProtectionTokenProviderOptions>(options =>

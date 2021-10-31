@@ -1,15 +1,24 @@
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Identity.CustomIdentityDB.Models;
+using Identity.CustomIdentityDB.Service;
 using MediatR;
 
 namespace Identity.CustomIdentityDB.Member.Query
 {
-    public class GetNotificationsByMemberIdQueryRequestHandler : IRequestHandler<GetNotificationsByMemberIdQueryRequest, Notification>
+    public class GetNotificationsByMemberIdQueryRequestHandler : IRequestHandler<GetNotificationsByMemberIdQueryRequest, IList<Notification>>
     {
-        public async Task<Notification> Handle(GetNotificationsByMemberIdQueryRequest request, CancellationToken cancellationToken)
+        private readonly IMemberService _memberService;
+
+        public GetNotificationsByMemberIdQueryRequestHandler(IMemberService memberService)
         {
-            return null;
+            _memberService = memberService;
+        }
+
+        public async Task<IList<Notification>> Handle(GetNotificationsByMemberIdQueryRequest request, CancellationToken cancellationToken)
+        {
+            return await _memberService.GetNotificationsByMemberIdAsync(request.MemberId);
         }
     }
 }
