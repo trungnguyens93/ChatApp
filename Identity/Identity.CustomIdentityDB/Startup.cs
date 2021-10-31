@@ -7,6 +7,7 @@ using Identity.CustomIdentityDB.Factories;
 using Identity.CustomIdentityDB.Models;
 using Identity.CustomIdentityDB.Providers;
 using Identity.CustomIdentityDB.Validators;
+using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -32,6 +33,8 @@ namespace Identity.CustomIdentityDB
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
+
+            services.AddMediatR(Assembly.GetExecutingAssembly());
 
             var connectionString = @"Server=.;Database=CustomIdentityUserDB;User Id=sa;Password=Admin@123;";
             var migrationAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;

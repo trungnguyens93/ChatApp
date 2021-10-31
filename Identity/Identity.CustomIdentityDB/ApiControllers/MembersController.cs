@@ -5,11 +5,11 @@ using Microsoft.Extensions.Configuration;
 namespace Identity.CustomIdentityDB.Controllers
 {
     [ApiController]
-    public class MemberController : Controller
+    public class MembersController : Controller
     {
         private readonly IConfiguration _configuration;
 
-        public MemberController(IConfiguration configuration)
+        public MembersController(IConfiguration configuration)
         {
             _configuration = configuration;
         }
