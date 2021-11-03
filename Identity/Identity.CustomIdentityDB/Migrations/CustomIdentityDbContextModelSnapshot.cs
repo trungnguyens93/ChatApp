@@ -143,9 +143,6 @@ namespace Identity.CustomIdentityDB.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("GroupId1")
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -158,11 +155,12 @@ namespace Identity.CustomIdentityDB.Migrations
                     b.Property<string>("ModifiedBy")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Sender")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("GroupId");
-
-                    b.HasIndex("GroupId1");
 
                     b.ToTable("Notifications");
                 });
@@ -345,10 +343,6 @@ namespace Identity.CustomIdentityDB.Migrations
                         .HasForeignKey("GroupId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("Identity.CustomIdentityDB.Models.Group", null)
-                        .WithMany()
-                        .HasForeignKey("GroupId1");
                 });
 
             modelBuilder.Entity("Identity.CustomIdentityDB.Models.UserGroup", b =>

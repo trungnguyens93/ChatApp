@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Identity.CustomIdentityDB.Models
 {
@@ -12,5 +13,7 @@ namespace Identity.CustomIdentityDB.Models
         public DateTime ModifiedAt { get; set; }
         public string ModifiedBy { get; set; }
         public bool? IsDeleted { get; set; }
+
+        public virtual ICollection<Notification> Notifications { get; set; }
     }
 }

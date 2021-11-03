@@ -31,14 +31,12 @@ namespace Identity.CustomIdentityDB.Models
                 grp.ToTable("Groups");
                 grp.HasKey(x => x.Id);
                 grp.HasMany<Notification>().WithOne().HasForeignKey(x => x.GroupId).IsRequired(true);
-                grp.HasMany<UserGroup>().WithOne().HasForeignKey(x => x.GroupId).IsRequired(false);
             });
 
             modelBuilder.Entity<Notification>(ntf =>
             {
                 ntf.ToTable("Notifications");
                 ntf.HasKey(x => x.Id);
-                ntf.HasOne<Group>();
             });
 
             modelBuilder.Entity<UserGroup>(ug =>

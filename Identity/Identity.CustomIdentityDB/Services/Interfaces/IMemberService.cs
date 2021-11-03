@@ -6,6 +6,9 @@ namespace Identity.CustomIdentityDB.Service
 {
     public interface IMemberService
     {
-        Task<IList<Notification>> GetNotificationsByMemberIdAsync(string memberId);
+        Task<Group> GetGroupInfoByGroupIdAsync(string groupId);
+        Task<IList<Group>> GetGroupsByMemberIdAsync(string memberId);
+        Task<IList<Notification>> GetNotificationsByGroupIdAsync(string groupId);
+        Task AddNewGroupForMemberAsync(string groupName);
     }
 }

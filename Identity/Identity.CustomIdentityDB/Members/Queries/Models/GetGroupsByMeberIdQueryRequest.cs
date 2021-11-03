@@ -4,7 +4,7 @@ using MediatR;
 
 namespace Identity.CustomIdentityDB.Member.Query
 {
-    public class GetNotificationsByMemberIdQueryRequest : IRequest<IList<Notification>>
+    public class GetGroupsByMemberIdQueryRequest : IRequest<IList<Group>>
     {
         public string MemberId { get; set; }
     }

@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Identity.CustomIdentityDb.Repository;
 using Identity.CustomIdentityDB.Factories;
+using Identity.CustomIdentityDB.Hub;
 using Identity.CustomIdentityDB.Models;
 using Identity.CustomIdentityDB.Providers;
 using Identity.CustomIdentityDB.Repository;
@@ -69,6 +70,9 @@ namespace Identity.CustomIdentityDB
             services.AddScoped<IUserClaimsPrincipalFactory<CustomIdentityUser>, CustomUserClaimsPrincipalFactory>();
             services.AddScoped<IIdentityUnitOfWork, IdentityUnitOfWork>();
             services.AddScoped<IMemberService, MemberService>();
+            services.AddScoped<INotificationService, NotificationService>();
+
+            services.AddSignalR();
 
             // using for Forgot password function
             services.Configure<DataProtectionTokenProviderOptions>(options =>
@@ -124,6 +128,8 @@ namespace Identity.CustomIdentityDB
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+                endpoints.MapHub<ChatHub>("message");
             });
         }
     }

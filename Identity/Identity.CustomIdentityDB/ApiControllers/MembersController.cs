@@ -19,10 +19,10 @@ namespace Identity.CustomIdentityDB.Controllers
             _mediator = mediator;
         }
 
-        [HttpGet("{id}/notifications")]
-        public async Task<IActionResult> GetNotificationsByMemberId(string id)
+        [HttpGet("{id}/groups")]
+        public async Task<IActionResult> GetGroupsByMemberId(string id)
         {
-            var request = new GetNotificationsByMemberIdQueryRequest
+            var request = new GetGroupsByMemberIdQueryRequest
             {
                 MemberId = id
             };

@@ -4,6 +4,5 @@ namespace Identity.CustomIdentityDB.Repository
 {
     public interface IGroupRepository : IGenericRepository<Group>
     {
-
     }
 }

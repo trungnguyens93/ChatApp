@@ -5,7 +5,7 @@ import ContactList from "../ContactList";
 
 import style from "./SidePanel.module.css";
 
-const SidePanel = () => {
+const SidePanel = (props) => {
   const user = {
     username: "Trung Nguyen",
     status: "online",

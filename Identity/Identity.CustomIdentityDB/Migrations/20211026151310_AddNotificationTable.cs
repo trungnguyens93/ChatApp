@@ -37,8 +37,7 @@ namespace Identity.CustomIdentityDB.Migrations
                     CreatedBy = table.Column<string>(nullable: true),
                     ModifiedAt = table.Column<DateTime>(nullable: false),
                     ModifiedBy = table.Column<string>(nullable: true),
-                    IsDeleted = table.Column<bool>(nullable: false),
-                    GroupId1 = table.Column<string>(nullable: true)
+                    IsDeleted = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -49,12 +48,6 @@ namespace Identity.CustomIdentityDB.Migrations
                         principalTable: "Groups",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Notifications_Groups_GroupId1",
-                        column: x => x.GroupId1,
-                        principalTable: "Groups",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -86,11 +79,6 @@ namespace Identity.CustomIdentityDB.Migrations
                 name: "IX_Notifications_GroupId",
                 table: "Notifications",
                 column: "GroupId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Notifications_GroupId1",
-                table: "Notifications",
-                column: "GroupId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserGroups_GroupId",

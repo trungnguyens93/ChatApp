@@ -7,7 +7,7 @@ using MediatR;
 
 namespace Identity.CustomIdentityDB.Member.Query
 {
-    public class GetNotificationsByMemberIdQueryRequestHandler : IRequestHandler<GetNotificationsByMemberIdQueryRequest, IList<Notification>>
+    public class GetNotificationsByMemberIdQueryRequestHandler : IRequestHandler<GetNotificationsByGroupIdQueryRequest, IList<Notification>>
     {
         private readonly IMemberService _memberService;
 
@@ -16,9 +16,9 @@ namespace Identity.CustomIdentityDB.Member.Query
             _memberService = memberService;
         }
 
-        public async Task<IList<Notification>> Handle(GetNotificationsByMemberIdQueryRequest request, CancellationToken cancellationToken)
+        public async Task<IList<Notification>> Handle(GetNotificationsByGroupIdQueryRequest request, CancellationToken cancellationToken)
         {
-            return await _memberService.GetNotificationsByMemberIdAsync(request.MemberId);
+            return await _memberService.GetNotificationsByGroupIdAsync(request.GroupId);
         }
     }
 }
